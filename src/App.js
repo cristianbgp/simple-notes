@@ -1,25 +1,45 @@
-import React from 'react';
-import logo from './logo.svg';
-import './App.css';
+import React from "react";
+import styled from "styled-components";
+import useLocalStorage from "./hooks/use-local-storage";
+
+const Container = styled.div`
+  height: 100%;
+`;
+const Title = styled.h1`
+  height: 10%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const TextArea = styled.textarea`
+  width: 100%;
+  height: 90%;
+  padding: 3em;
+  resize: none;
+  border: none;
+  &:focus {
+    outline: 1px solid black;
+    outline-offset: -1em;
+  }
+`;
 
 function App() {
+  const [note, setNote] = useLocalStorage("simple-notes");
+
+  const handleOnChange = event => {
+    setNote(event.target.value);
+  };
+
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
+    <Container>
+      <Title>Simple notes</Title>
+      <TextArea
+        placeholder="Your notes"
+        onChange={handleOnChange}
+        value={note}
+      ></TextArea>
+    </Container>
   );
 }
 
