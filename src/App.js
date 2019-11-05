@@ -5,11 +5,16 @@ import useLocalStorage from "./hooks/use-local-storage";
 const Container = styled.div`
   height: 100%;
 `;
-const Title = styled.h1`
-  height: 10%;
+const Title = styled.h1``;
+
+const Header = styled.header`
+  height: 8%;
+  margin-bottom: 2%;
   display: flex;
   justify-content: center;
   align-items: center;
+  border-bottom: 1px solid #eaeaea;
+  box-shadow: 0px 0px 10px 0px rgba(0, 0, 0, 0.12);
 `;
 
 const TextArea = styled.textarea`
@@ -33,7 +38,9 @@ function App() {
 
   return (
     <Container>
-      <Title>Simple notes</Title>
+      <Header>
+        <Title>Simple notes</Title>
+      </Header>
       <TextArea
         placeholder="Your notes"
         onChange={handleOnChange}
