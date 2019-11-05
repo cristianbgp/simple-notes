@@ -1,6 +1,6 @@
 import React from "react";
 import styled from "styled-components";
-import useLocalStorage from "./hooks/use-local-storage";
+import useLocalStorage from "../hooks/use-local-storage";
 
 const Container = styled.div`
   height: 100%;
