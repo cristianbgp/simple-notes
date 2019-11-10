@@ -1,12 +1,13 @@
 import React from "react";
 import styled from "styled-components";
 import useLocalStorage from "../hooks/use-local-storage";
+import MarkdownIt from "markdown-it";
 
 const Container = styled.div`
   display: grid;
-  grid-template-areas: "header" "text";
+  grid-template-areas: "header" "main";
   grid-template-rows: 1fr 93%;
-  height: 100%;
+  height: 100vh;
 `;
 
 const Title = styled.h1`
@@ -24,9 +25,15 @@ const Header = styled.header`
   z-index: 1;
 `;
 
+const Main = styled.main`
+  grid-area: main;
+  display: grid;
+  grid-template-areas: "text visual";
+  grid-template-columns: 50% 50%;
+`;
+
 const TextArea = styled.textarea`
-  grid-area: text;
-  padding: 3em;
+  padding: 2rem;
   resize: none;
   border: none;
   &:focus {
@@ -35,8 +42,18 @@ const TextArea = styled.textarea`
   }
 `;
 
+const Content = styled.div`
+  padding: 2rem;
+  code {
+    background-color: rgba(0, 0, 0, 0.05);
+    font-family: "Inconsolata", "Menlo", "Consolas", monospace;
+    padding: 0.2rem;
+  }
+`;
+
 function App() {
   const [note, setNote] = useLocalStorage("simple-notes");
+  const md = new MarkdownIt();
 
   const handleOnChange = event => {
     setNote(event.target.value);
@@ -47,11 +64,14 @@ function App() {
       <Header>
         <Title>Simple notes</Title>
       </Header>
-      <TextArea
-        placeholder="Your notes"
-        onChange={handleOnChange}
-        value={note}
-      ></TextArea>
+      <Main>
+        <TextArea
+          placeholder="Your notes"
+          onChange={handleOnChange}
+          value={note}
+        ></TextArea>
+        <Content dangerouslySetInnerHTML={{ __html: md.render(note) }} />
+      </Main>
     </Container>
   );
 }
