@@ -2,6 +2,8 @@ import React from "react";
 import styled from "styled-components";
 import useLocalStorage from "../hooks/use-local-storage";
 import MarkdownIt from "markdown-it";
+import hljs from "highlight.js";
+import "highlight.js/styles/grayscale.css";
 
 const Container = styled.div`
   display: grid;
@@ -46,16 +48,39 @@ const Content = styled.div`
   padding: 2rem;
   code {
     background-color: rgba(0, 0, 0, 0.05);
-    font-family: "Inconsolata", "Menlo", "Consolas", monospace;
     padding: 0.2rem;
   }
+  pre {
+    overflow-x: auto;
+    code {
+      font-family: "Inconsolata", "Menlo", "Consolas", monospace;
+      background: initial;
+    }
+  }
+  
 `;
 
 function App() {
   const [note, setNote] = useLocalStorage("simple-notes");
-  const md = new MarkdownIt();
+  const md = new MarkdownIt("commonmark", {
+    highlight: function (str, lang) {
+      if (lang && hljs.getLanguage(lang)) {
+        try {
+          return (
+            '<pre class="hljs"><code>' +
+            hljs.highlight(lang, str, true).value +
+            "</code></pre>"
+          );
+        } catch (__) {}
+      }
 
-  const handleOnChange = event => {
+      return (
+        '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + "</code></pre>"
+      );
+    },
+  });
+
+  const handleOnChange = (event) => {
     setNote(event.target.value);
   };
 
