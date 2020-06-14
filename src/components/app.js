@@ -6,6 +6,8 @@ import hljs from "highlight.js";
 import "highlight.js/styles/grayscale.css";
 
 const Container = styled.div`
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   display: grid;
   grid-template-areas: "header" "main";
   grid-template-rows: 1fr 93%;
@@ -35,6 +37,8 @@ const Main = styled.main`
 `;
 
 const TextArea = styled.textarea`
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen,
+    Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
   padding: 2rem;
   resize: none;
   border: none;
@@ -57,7 +61,6 @@ const Content = styled.div`
       background: initial;
     }
   }
-  
 `;
 
 function App() {
