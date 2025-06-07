@@ -41,16 +41,34 @@ function App() {
     )}</code>`;
   };
 
+  // Style for images
+  md.renderer.rules.image = (tokens, idx) => {
+    const token = tokens[idx];
+    const alt = token.content;
+    const src = token.attrs?.[0]?.[1] || "";
+    const title = token.attrs?.[1]?.[1] || "";
+    return `<img src="${src}" alt="${alt}" title="${title}" class="max-w-full h-auto rounded-lg my-4" loading="lazy">`;
+  };
+
+  // Style for strikethrough
+  md.renderer.rules.s_open = () => {
+    return '<del class="line-through text-gray-500">';
+  };
+
   // Style for blockquotes
   md.renderer.rules.blockquote_open = () => {
-    return '<blockquote class="pl-4 border-l-4 border-gray-200 text-gray-700 my-4 italic">';
+    return '<blockquote class="pl-4 border-l-4 border-gray-200 text-gray-700 my-4 text-base">';
   };
 
   // Style for links
   md.renderer.rules.link_open = (tokens, idx: number) => {
     const token = tokens[idx];
     const href = token?.attrs?.[0]?.[1];
-    return `<a href="${href}" class="text-gray-600 hover:text-gray-800 hover:!underline">`;
+    return `<a href="${href}" target="${
+      href?.startsWith("http") ? "_blank" : "_self"
+    }" rel="${
+      href?.startsWith("http") ? "noopener noreferrer" : ""
+    }" class="text-gray-600 hover:text-gray-800 hover:underline transition-colors duration-200">`;
   };
 
   // Style for lists
@@ -62,6 +80,22 @@ function App() {
     return '<ol class="list-decimal pl-6 my-4 space-y-2">';
   };
 
+  // Style for task lists
+  md.renderer.rules.checkbox = (tokens, idx) => {
+    const token = tokens[idx];
+    const isChecked = token.attrGet("checked") === "true";
+    return `<input type="checkbox" ${
+      isChecked ? "checked" : ""
+    } disabled class="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-500">`;
+  };
+
+  md.renderer.rules.list_item_open = (tokens, idx) => {
+    if (tokens[idx + 2]?.type === "checkbox") {
+      return '<li class="flex items-start">';
+    }
+    return "<li>";
+  };
+
   // Style for horizontal rules
   md.renderer.rules.hr = () => {
     return '<hr class="my-8 border-t border-gray-200">';
@@ -69,7 +103,13 @@ function App() {
 
   // Style for code blocks
   const originalFence = md.renderer.rules.fence!.bind(md.renderer.rules);
-  md.renderer.rules.fence = (tokens: any[], idx: number, options: any, env: any, slf: any) => {
+  md.renderer.rules.fence = (
+    tokens: any[],
+    idx: number,
+    options: any,
+    env: any,
+    slf: any
+  ) => {
     const content = originalFence(tokens, idx, options, env, slf);
     return `<div class="my-4 rounded-lg overflow-hidden">${content}</div>`;
   };
@@ -87,6 +127,14 @@ function App() {
   // Style for tables
   md.renderer.rules.table_open = () => {
     return '<div class="my-4 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-200">';
+  };
+
+  md.renderer.rules.thead_open = () => {
+    return '<thead class="bg-gray-50">';
+  };
+
+  md.renderer.rules.tbody_open = () => {
+    return '<tbody class="divide-y divide-gray-200">';
   };
 
   md.renderer.rules.th_open = () => {
