@@ -13,11 +13,7 @@ import "highlight.js/styles/grayscale.css";
 function App() {
   const [note, setNote] = useLocalStorage("simple-notes-values", "");
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  const md = new MarkdownIt("commonmark", {
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
+  const md: MarkdownIt = new MarkdownIt("commonmark", {
     highlight: function (str, lang) {
       if (lang && hljs.getLanguage(lang)) {
         try {
@@ -37,9 +33,72 @@ function App() {
     },
   });
 
-  // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-  // @ts-ignore
-  md.renderer.rules.heading_open = function (tokens, idx: string) {
+  // Style for inline code
+  md.renderer.rules.code_inline = (tokens, idx: number) => {
+    const content = tokens[idx].content;
+    return `<code class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-sm font-mono">${md.utils.escapeHtml(
+      content
+    )}</code>`;
+  };
+
+  // Style for blockquotes
+  md.renderer.rules.blockquote_open = () => {
+    return '<blockquote class="pl-4 border-l-4 border-gray-200 text-gray-700 my-4 italic">';
+  };
+
+  // Style for links
+  md.renderer.rules.link_open = (tokens, idx: number) => {
+    const token = tokens[idx];
+    const href = token?.attrs?.[0]?.[1];
+    return `<a href="${href}" class="text-gray-600 hover:text-gray-800 hover:!underline">`;
+  };
+
+  // Style for lists
+  md.renderer.rules.bullet_list_open = () => {
+    return '<ul class="list-disc pl-6 my-4 space-y-2">';
+  };
+
+  md.renderer.rules.ordered_list_open = () => {
+    return '<ol class="list-decimal pl-6 my-4 space-y-2">';
+  };
+
+  // Style for horizontal rules
+  md.renderer.rules.hr = () => {
+    return '<hr class="my-8 border-t border-gray-200">';
+  };
+
+  // Style for code blocks
+  const originalFence = md.renderer.rules.fence!.bind(md.renderer.rules);
+  md.renderer.rules.fence = (tokens: any[], idx: number, options: any, env: any, slf: any) => {
+    const content = originalFence(tokens, idx, options, env, slf);
+    return `<div class="my-4 rounded-lg overflow-hidden">${content}</div>`;
+  };
+
+  // Style for strong (bold) text
+  md.renderer.rules.strong_open = () => {
+    return '<strong class="font-bold">';
+  };
+
+  // Style for emphasis (italic) text
+  md.renderer.rules.em_open = () => {
+    return '<em class="italic">';
+  };
+
+  // Style for tables
+  md.renderer.rules.table_open = () => {
+    return '<div class="my-4 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-200">';
+  };
+
+  md.renderer.rules.th_open = () => {
+    return '<th class="border border-gray-200 bg-gray-50 px-4 py-2 text-left font-semibold">';
+  };
+
+  md.renderer.rules.td_open = () => {
+    return '<td class="border border-gray-200 px-4 py-2">';
+  };
+
+  // Style for headings
+  md.renderer.rules.heading_open = (tokens, idx: number) => {
     const token = tokens[idx];
     const level = token.tag as string;
     const classes = {
@@ -65,9 +124,12 @@ function App() {
         direction="horizontal"
       >
         <ResizablePanel defaultSize={50} minSize={20} className="h-full">
-          <ScrollArea className="w-full h-full rounded-none [&>div>div]:h-full">
+          <ScrollArea
+            className="w-full h-full rounded-none [&>div>div]:h-full"
+            orientation="both"
+          >
             <Textarea
-              className="border-none shadow-none rounded-none h-full resize-none focus-visible:shadow-none focus-visible:ring-0 outline-0 border-transparent outline-offset-[-1em] focus:border-transparent focus:ring-0"
+              className="border-none shadow-none rounded-none h-full whitespace-pre resize-none focus-visible:shadow-none focus-visible:ring-0 outline-0 border-transparent outline-offset-[-1em] focus:border-transparent focus:ring-0"
               placeholder="Your notes"
               value={note}
               onChange={(event) => setNote(event.target.value)}
@@ -76,7 +138,10 @@ function App() {
         </ResizablePanel>
         <ResizableHandle withHandle />
         <ResizablePanel defaultSize={50} minSize={20} className="h-full">
-          <ScrollArea className="w-full h-full rounded-none [&>div>div]:h-full px-3 py-2">
+          <ScrollArea
+            className="w-full h-full rounded-none [&>div>div]:h-full px-3 py-2"
+            orientation="both"
+          >
             <div
               className="[&_code]:bg-[rgba(0,0,0, 0.05)] [&_pre]:overflow-x-auto [&_pre>code]:font-mono [&_pre>code]:bg-[initial]"
               dangerouslySetInnerHTML={{ __html: md.render(note) }}
