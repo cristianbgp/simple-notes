@@ -8,17 +8,27 @@ import { ScrollArea } from "./components/ui/scroll-area";
 import { useLocalStorage } from "./hooks/use-local-storage";
 import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
-import "highlight.js/styles/grayscale.css";
+import { useTheme } from "./components/theme-provider";
+import { useEffect } from "react";
 
 function App() {
   const [note, setNote] = useLocalStorage("simple-notes-values", "");
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    if (theme === "dark") {
+      import("./styles/grayscale-dark.css");
+    } else {
+      import("./styles/grayscale-light.css");
+    }
+  }, [theme]);
 
   const md: MarkdownIt = new MarkdownIt("commonmark", {
     highlight: function (str, lang) {
       if (lang && hljs.getLanguage(lang)) {
         try {
           return (
-            '<pre class="hljs"><code>' +
+            `<pre class="p-2 hljs"><code>` +
             hljs.highlight(lang, str, true).value +
             "</code></pre>"
           );
@@ -28,7 +38,9 @@ function App() {
       }
 
       return (
-        '<pre class="hljs"><code>' + md.utils.escapeHtml(str) + "</code></pre>"
+        '<pre class="hljs p-2"><code>' +
+        md.utils.escapeHtml(str) +
+        "</code></pre>"
       );
     },
   });
@@ -36,7 +48,7 @@ function App() {
   // Style for inline code
   md.renderer.rules.code_inline = (tokens, idx: number) => {
     const content = tokens[idx].content;
-    return `<code class="bg-gray-100 text-gray-700 px-1.5 py-0.5 rounded text-sm font-mono">${md.utils.escapeHtml(
+    return `<code class="bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-300 px-1.5 py-0.5 rounded text-sm font-mono">${md.utils.escapeHtml(
       content
     )}</code>`;
   };
@@ -57,7 +69,7 @@ function App() {
 
   // Style for blockquotes
   md.renderer.rules.blockquote_open = () => {
-    return '<blockquote class="pl-4 border-l-4 border-gray-200 text-gray-700 my-4 text-base">';
+    return '<blockquote class="pl-4 border-l-4 border-gray-200 text-gray-700 dark:text-gray-300 my-4 text-base">';
   };
 
   // Style for links
@@ -68,7 +80,7 @@ function App() {
       href?.startsWith("http") ? "_blank" : "_self"
     }" rel="${
       href?.startsWith("http") ? "noopener noreferrer" : ""
-    }" class="text-gray-600 hover:text-gray-800 hover:underline transition-colors duration-200">`;
+    }" class="text-gray-600 hover:text-gray-800 dark:text-gray-400 dark:hover:text-gray-200 hover:underline transition-colors duration-200">`;
   };
 
   // Style for lists
@@ -86,7 +98,7 @@ function App() {
     const isChecked = token.attrGet("checked") === "true";
     return `<input type="checkbox" ${
       isChecked ? "checked" : ""
-    } disabled class="mr-2 rounded border-gray-300 text-gray-600 focus:ring-gray-500">`;
+    } disabled class="mr-2 rounded border-gray-300 text-gray-600 dark:text-gray-400 dark:border-gray-600 dark:bg-gray-700 dark:checked:bg-gray-600 dark:checked:border-gray-600 dark:checked:text-gray-200 focus:ring-gray-500">`;
   };
 
   md.renderer.rules.list_item_open = (tokens, idx) => {
@@ -111,7 +123,7 @@ function App() {
     slf: any
   ) => {
     const content = originalFence(tokens, idx, options, env, slf);
-    return `<div class="my-4 rounded-lg overflow-hidden">${content}</div>`;
+    return `<div class="my-4 overflow-hidden dark:bg-gray-800 dark:text-gray-300 rounded-none">${content}</div>`;
   };
 
   // Style for strong (bold) text
@@ -126,23 +138,23 @@ function App() {
 
   // Style for tables
   md.renderer.rules.table_open = () => {
-    return '<div class="my-4 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-200">';
+    return '<div class="my-4 overflow-x-auto"><table class="min-w-full border-collapse border border-gray-200 dark:border-gray-600">';
   };
 
   md.renderer.rules.thead_open = () => {
-    return '<thead class="bg-gray-50">';
+    return '<thead class="bg-gray-50 dark:bg-gray-800">';
   };
 
   md.renderer.rules.tbody_open = () => {
-    return '<tbody class="divide-y divide-gray-200">';
+    return '<tbody class="divide-y divide-gray-200 dark:divide-gray-600">';
   };
 
   md.renderer.rules.th_open = () => {
-    return '<th class="border border-gray-200 bg-gray-50 px-4 py-2 text-left font-semibold">';
+    return '<th class="border border-gray-200 bg-gray-50 dark:bg-gray-800 dark:border-gray-600 px-4 py-2 text-left font-semibold">';
   };
 
   md.renderer.rules.td_open = () => {
-    return '<td class="border border-gray-200 px-4 py-2">';
+    return '<td class="border border-gray-200 dark:border-gray-600 px-4 py-2">';
   };
 
   // Style for headings
@@ -163,7 +175,7 @@ function App() {
 
   return (
     <div className="grid grid-rows-[min-content_1fr] h-screen">
-      <header className="border-b py-2 border-[#eaeaea] flex justify-center items-center z-10">
+      <header className="border-b py-2 border-[#eaeaea] dark:border-[#222] flex justify-center items-center z-10">
         <h1 className="text-2xl font-semibold">Simple notes</h1>
       </header>
       <ResizablePanelGroup
@@ -191,7 +203,7 @@ function App() {
             orientation="both"
           >
             <div
-              className="[&_code]:bg-[rgba(0,0,0, 0.05)] [&_pre]:overflow-x-auto [&_pre>code]:font-mono [&_pre>code]:bg-[initial]"
+              className="[&_code]:bg-[rgba(0,0,0, 0.05)] dark:[&_code]:bg-[rgba(255,255,255, 0.05)] [&_pre]:overflow-x-auto [&_pre>code]:font-mono [&_pre>code]:bg-[initial]"
               dangerouslySetInnerHTML={{ __html: md.render(note) }}
             />
           </ScrollArea>
