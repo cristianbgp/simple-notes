@@ -10,6 +10,7 @@ import MarkdownIt from "markdown-it";
 import hljs from "highlight.js";
 import { useTheme } from "./components/theme-provider";
 import { useEffect } from "react";
+import Token from "markdown-it/lib/token";
 
 function App() {
   const [note, setNote] = useLocalStorage("simple-notes-values", "");
@@ -43,7 +44,94 @@ function App() {
         "</code></pre>"
       );
     },
+  }).enable(['table']); // Enable table support
+
+  // Add abbreviation support
+  const abbreviations: Record<string, string> = {};
+
+  // Add custom tokenizer for abbreviation definitions
+  md.block.ruler.before('paragraph', 'abbr_def', function (state, startLine, _endLine, silent) {
+    const pos = state.bMarks[startLine] + state.tShift[startLine];
+    const max = state.eMarks[startLine];
+    const line = state.src.slice(pos, max);
+
+    const match = line.match(/^\*\[(.*?)\]:\s*(.*)$/);
+    if (!match) return false;
+
+    if (silent) return true;
+
+    const [, abbr, title] = match;
+    abbreviations[abbr] = title;
+
+    state.line = startLine + 1;
+    return true;
   });
+
+  // Add custom renderer for abbreviations
+  md.core.ruler.after('inline', 'abbr_replace', function (state) {
+    const tokens = state.tokens;
+
+    for (let i = 0; i < tokens.length; i++) {
+      const token = tokens[i];
+      if (token.type === 'inline' && token.children) {
+        const newChildren: Token[] = [];
+
+        for (const child of token.children) {
+          if (child.type === 'text') {
+            let text = child.content;
+            let lastIndex = 0;
+
+            for (const [abbr, title] of Object.entries(abbreviations)) {
+              const regex = new RegExp(`\\b${abbr}\\b`, 'g');
+              let match;
+
+              while ((match = regex.exec(text)) !== null) {
+                if (match.index > lastIndex) {
+                  const textToken = new state.Token('text', '', 0);
+                  textToken.content = text.slice(lastIndex, match.index);
+                  newChildren.push(textToken);
+                }
+
+                const openToken = new state.Token('abbr_open', 'abbr', 1);
+                openToken.attrs = [['title', title], ['class', 'cursor-help border-dotted border-b dark:border-gray-500']];
+
+                const contentToken = new state.Token('text', '', 0);
+                contentToken.content = abbr;
+
+                const closeToken = new state.Token('abbr_close', 'abbr', -1);
+
+                newChildren.push(openToken, contentToken, closeToken);
+
+                lastIndex = match.index + abbr.length;
+              }
+            }
+
+            if (lastIndex < text.length) {
+              const textToken = new state.Token('text', '', 0);
+              textToken.content = text.slice(lastIndex);
+              newChildren.push(textToken);
+            }
+          } else {
+            newChildren.push(child);
+          }
+        }
+
+        token.children = newChildren;
+      }
+    }
+    return true;
+  });
+
+  // Add renderer rules for abbreviation tags
+  md.renderer.rules.abbr_open = function (tokens, idx) {
+    const token = tokens[idx];
+    const attrs = token.attrs || [];
+    const title = attrs.find(([name]) => name === 'title')?.[1] || '';
+    const className = attrs.find(([name]) => name === 'class')?.[1] || '';
+    return `<abbr title="${md.utils.escapeHtml(title)}" class="${className}">`;
+  };
+
+  md.renderer.rules.abbr_close = () => '</abbr>';
 
   // Style for inline code
   md.renderer.rules.code_inline = (tokens, idx: number) => {
